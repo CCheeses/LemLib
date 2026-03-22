@@ -303,6 +303,9 @@ void lemlib::Chassis::follow(const asset& path, float lookahead, int timeout, bo
 }
 
 void lemlib::Chassis::followPoints(const std::vector<Pose>& pathPoints, float lookahead, int timeout, bool forwards, bool async) {
+    this->requestMotionStart();
+    if (!this->motionRunning) return;
+    
     Pose pose = this->getPose(true);
     Pose lastPose = pose;
     Pose lookaheadPose(0, 0, 0);
