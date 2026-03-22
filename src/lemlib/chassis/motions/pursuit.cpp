@@ -301,3 +301,84 @@ void lemlib::Chassis::follow(const asset& path, float lookahead, int timeout, bo
     // give the mutex back
     this->endMotion();
 }
+
+void lemlib::Chassis::followPoints(const std::vector<Pose>& pathPoints, float lookahead, int timeout, bool forwards, bool async) {
+    Pose pose = this->getPose(true);
+    Pose lastPose = pose;
+    Pose lookaheadPose(0, 0, 0);
+    Pose lastLookahead = pathPoints.at(0);
+    lastLookahead.theta = 0;
+    float curvature;
+    float targetVel;
+    float prevLeftVel = 0;
+    float prevRightVel = 0;
+    int closestPoint;
+    float leftInput = 0;
+    float rightInput = 0;
+    float prevVel = 0;
+    int compState = pros::competition::get_status();
+    distTraveled = 0;
+
+    // loop until the robot is within the end tolerance
+    for (int i = 0; i < timeout / 10 && pros::competition::get_status() == compState && this->motionRunning; i++) {
+        // get the current position of the robot
+        pose = this->getPose(true);
+        if (!forwards) pose.theta -= M_PI;
+
+        // update completion vars
+        distTraveled += pose.distance(lastPose);
+        lastPose = pose;
+
+        // find the closest point on the path to the robot
+        closestPoint = findClosest(pose, pathPoints);
+        // if the robot is at the end of the path, then stop
+        if (pathPoints.at(closestPoint).theta == 0) break;
+
+        // find the lookahead point
+        lookaheadPose = lookaheadPoint(lastLookahead, pose, pathPoints, closestPoint, lookahead);
+        lastLookahead = lookaheadPose; // update last lookahead position
+
+        // get the curvature of the arc between the robot and the lookahead point
+        float curvatureHeading = M_PI / 2 - pose.theta;
+        curvature = findLookaheadCurvature(pose, curvatureHeading, lookaheadPose);
+
+        // get the target velocity of the robot
+        targetVel = pathPoints.at(closestPoint).theta;
+        targetVel = slew(targetVel, prevVel, lateralSettings.slew);
+        prevVel = targetVel;
+
+        // calculate target left and right velocities
+        float targetLeftVel = targetVel * (2 + curvature * drivetrain.trackWidth) / 2;
+        float targetRightVel = targetVel * (2 - curvature * drivetrain.trackWidth) / 2;
+
+        // ratio the speeds to respect the max speed
+        float ratio = std::max(std::fabs(targetLeftVel), std::fabs(targetRightVel)) / 127;
+        if (ratio > 1) {
+            targetLeftVel /= ratio;
+            targetRightVel /= ratio;
+        }
+
+        // update previous velocities
+        prevLeftVel = targetLeftVel;
+        prevRightVel = targetRightVel;
+
+        // move the drivetrain
+        if (forwards) {
+            drivetrain.leftMotors->move(targetLeftVel);
+            drivetrain.rightMotors->move(targetRightVel);
+        } else {
+            drivetrain.leftMotors->move(-targetRightVel);
+            drivetrain.rightMotors->move(-targetLeftVel);
+        }
+
+        pros::delay(10);
+    }
+
+    // stop the robot
+    drivetrain.leftMotors->move(0);
+    drivetrain.rightMotors->move(0);
+    // set distTraveled to -1 to indicate that the function has finished
+    distTraveled = -1;
+    // give the mutex back
+    this->endMotion();
+}
