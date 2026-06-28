@@ -709,30 +709,57 @@ class Chassis {
          */
         void follow(const asset& path, float lookahead, int timeout, bool forwards = true, bool async = true);
         /**
-         * @brief Control the robot during the driver using the tank drive control scheme. In this control scheme one
-         * joystick axis controls the left motors' forward and backwards movement of the robot, while the other joystick
-         * axis controls right motors' forward and backward movement.
-         * @param left speed to move left wheels forward or backward. Takes an input from -127 to 127.
-         * @param right speed to move right wheels forward or backward. Takes an input from -127 to 127.
-         * @param disableDriveCurve whether to disable the drive curve or not. If disabled, uses a linear curve with no
-         * deadzone or minimum power
+         * @brief Move the chassis along a path
+         *
+         * @param path the path asset to follow
+         * @param lookahead the lookahead distance. Units in inches. Larger values will make the robot move
+         * faster but will follow the path less accurately
+         * @param timeout the maximum time the robot can spend moving
+         * @param forwards whether the robot should follow the path going forwards. true by default
+         * @param async whether the function should be run asynchronously. true by default
          *
          * @b Example
          * @code {.cpp}
-         * // opcontrol function in your project. The function that runs during the driver control period
-         * void opcontrol() {
-         *     // controller
-         *     pros::Controller controller(pros::E_CONTROLLER_MASTER);
-         *     // loop to continuously update motors
-         *     while (true) {
-         *         // get joystick positions
-         *         int leftY = controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-         *         int rightY = controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y);
-         *         // move the chassis with tank controls
-         *         chassis.tank(leftY, rightY);
-         *         // delay to save resources
-         *         pros::delay(25);
-         *     }
+         * // load "myPath.txt"
+         * // the file should be in the "static" folder in the project root directory
+         * // this should also be done outside of any functions, otherwise it won't compile
+         * ASSET(myPath_txt); // we replace "." with "_" to make the asset name valid
+         *
+         * // autonomous function in your project. The function that runs during the autonomous period
+         * void autonomous() {
+         *     // follow the path in "myPath.txt" with a lookahead of 10 inches and a timeout of 4000ms
+         *     chassis.follow(myPath_txt, 10, 4000);
+         *     // follow the path in "myPath.txt" with a lookahead of 10 inches and a timeout of 4000ms
+         *     // but follow the path backwards
+         *     chassis.follow(myPath_txt, 10, 4000, false);
+         * }
+         * @endcode
+         */
+         void followPoints(const std::vector<Pose>& pathPoints, float lookahead, int timeout, bool forwards = true, bool async = true);
+        /**
+         * @brief Move the chassis along a path
+         *
+         * @param path the path asset to follow
+         * @param lookahead the lookahead distance. Units in inches. Larger values will make the robot move
+         * faster but will follow the path less accurately
+         * @param timeout the maximum time the robot can spend moving
+         * @param forwards whether the robot should follow the path going forwards. true by default
+         * @param async whether the function should be run asynchronously. true by default
+         *
+         * @b Example
+         * @code {.cpp}
+         * // load "myPath.txt"
+         * // the file should be in the "static" folder in the project root directory
+         * // this should also be done outside of any functions, otherwise it won't compile
+         * ASSET(myPath_txt); // we replace "." with "_" to make the asset name valid
+         *
+         * // autonomous function in your project. The function that runs during the autonomous period
+         * void autonomous() {
+         *     // follow the path in "myPath.txt" with a lookahead of 10 inches and a timeout of 4000ms
+         *     chassis.follow(myPath_txt, 10, 4000);
+         *     // follow the path in "myPath.txt" with a lookahead of 10 inches and a timeout of 4000ms
+         *     // but follow the path backwards
+         *     chassis.follow(myPath_txt, 10, 4000, false);
          * }
          * @endcode
          */
