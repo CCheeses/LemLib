@@ -7,6 +7,11 @@
 
 void lemlib::Chassis::swingToHeading(float theta, DriveSide lockedSide, int timeout, SwingToHeadingParams params,
                                      bool async) {
+    // auto-mirroring check
+    if (currentAlliance != defaultAlliance && currentAlliance != lemlib::Alliance::NONE && defaultAlliance != lemlib::Alliance::NONE) {
+        // flip theta
+        theta = fmod(360.0 - theta,360.0);
+    }
     params.minSpeed = fabs(params.minSpeed);
     this->requestMotionStart();
     // were all motions cancelled?

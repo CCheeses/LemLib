@@ -6,6 +6,14 @@
 #include "pros/misc.hpp"
 
 void lemlib::Chassis::moveToPose(float x, float y, float theta, int timeout, MoveToPoseParams params, bool async) {
+    // auto-mirroring check
+    if (currentAlliance != defaultAlliance && currentAlliance != lemlib::Alliance::NONE && defaultAlliance != lemlib::Alliance::NONE) {
+        // flip X
+        x = -x;
+        // flip theta
+        theta = fmod(360.0 - theta,360.0);
+    }
+    
     // take the mutex
     this->requestMotionStart();
     // were all motions cancelled?

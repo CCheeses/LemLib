@@ -10,6 +10,14 @@
 #include "lemlib/driveCurve.hpp"
 
 namespace lemlib {
+/**
+ * @brief 
+ */
+enum class Alliance {
+   NONE,
+   RED,
+   BLUE
+};
 
 /**
  * @brief class containing the sensors used for odometry
@@ -923,6 +931,34 @@ class Chassis {
          */
         void resetLocalPosition();
         /**
+         * @brief Defines the alliance the autonomous
+         * routine is coded in for auto mirroring.
+         *
+         * @param defaultAlliance the alliance to interpret the positions and headings from
+         *
+         * @b Example
+         * @code {.cpp}
+         * // sets the default alliance to Red
+         * chassis.setDefaultAlliance(Alliance::RED);
+         * // points will be interpreted as on the red side
+         */
+        void setDefaultAlliance(Alliance defaultAlliance);
+        /**
+         * @brief Runs the autonomous routine from a
+         * specified alliance (used with setDefaultAlliance)
+         *
+         * @param alliance the alliance side to run the autonomous routine from
+         *
+         * @b Example
+         * @code {.cpp}
+         * // sets the autonomous points to the red alliance side
+         * chassis.setDefaultAlliance(Alliance::RED);
+         * // flips the theta and x positions to the blue side
+         * classis.setAlliance(Alliance::BLUE);
+         * // the points will be flipped and interpreted to be on the blue side
+         */
+        void setAlliance(Alliance alliance);
+        /**
          * PIDs are exposed so advanced users can implement things like gain scheduling
          * Changes are immediate and will affect a motion in progress
          *
@@ -962,6 +998,9 @@ class Chassis {
         ExitCondition lateralSmallExit;
         ExitCondition angularLargeExit;
         ExitCondition angularSmallExit;
+
+        Alliance defaultAlliance;
+        Alliance currentAlliance;
     private:
         pros::Mutex mutex;
 };

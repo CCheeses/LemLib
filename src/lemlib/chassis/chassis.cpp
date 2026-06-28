@@ -39,7 +39,9 @@ lemlib::Chassis::Chassis(Drivetrain drivetrain, ControllerSettings linearSetting
       lateralLargeExit(lateralSettings.largeError, lateralSettings.largeErrorTimeout),
       lateralSmallExit(lateralSettings.smallError, lateralSettings.smallErrorTimeout),
       angularLargeExit(angularSettings.largeError, angularSettings.largeErrorTimeout),
-      angularSmallExit(angularSettings.smallError, angularSettings.smallErrorTimeout) {}
+      angularSmallExit(angularSettings.smallError, angularSettings.smallErrorTimeout),
+      defaultAlliance(lemlib::Alliance::NONE),
+      currentAlliance(lemlib::Alliance::NONE) {}
 
 /**
  * @brief calibrate the IMU given a sensors struct
@@ -93,10 +95,17 @@ void lemlib::Chassis::calibrate(bool calibrateImu) {
 }
 
 void lemlib::Chassis::setPose(float x, float y, float theta, bool radians) {
+    if (currentAlliance != defaultAlliance && currentAlliance != lemlib::Alliance::NONE && defaultAlliance != lemlib::Alliance::NONE) {
+        // flip X
+        x = -x;
+        // flip theta (use the correct full circle for the given unit)
+        const float fullCircle = radians ? 2 * M_PI : 360.0;
+        theta = fmod(fullCircle - theta, fullCircle);
+    }
     lemlib::setPose(lemlib::Pose(x, y, theta), radians);
 }
 
-void lemlib::Chassis::setPose(Pose pose, bool radians) { lemlib::setPose(pose, radians); }
+void lemlib::Chassis::setPose(Pose pose, bool radians) { setPose(pose.x, pose.y, pose.theta, radians); }
 
 lemlib::Pose lemlib::Chassis::getPose(bool radians, bool standardPos) {
     Pose pose = lemlib::getPose(true);
@@ -158,4 +167,12 @@ void lemlib::Chassis::resetLocalPosition() {
 void lemlib::Chassis::setBrakeMode(pros::motor_brake_mode_e mode) {
     drivetrain.leftMotors->set_brake_mode_all(mode);
     drivetrain.rightMotors->set_brake_mode_all(mode);
+}
+
+void lemlib::Chassis::setDefaultAlliance(lemlib::Alliance defaultAlliance) {
+    this->currentAlliance = this->defaultAlliance = defaultAlliance;
+}
+
+void lemlib::Chassis::setAlliance(lemlib::Alliance alliance) {
+    this->currentAlliance = alliance;
 }

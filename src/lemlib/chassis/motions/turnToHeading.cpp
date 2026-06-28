@@ -6,6 +6,12 @@
 #include "pros/misc.hpp"
 
 void lemlib::Chassis::turnToHeading(float theta, int timeout, TurnToHeadingParams params, bool async) {
+    // auto-mirroring check
+    if (currentAlliance != defaultAlliance && currentAlliance != lemlib::Alliance::NONE && defaultAlliance != lemlib::Alliance::NONE) {
+        // flip theta
+        theta = fmod(360.0 - theta,360.0);
+    }
+    
     params.minSpeed = std::abs(params.minSpeed);
     this->requestMotionStart();
     // were all motions cancelled?

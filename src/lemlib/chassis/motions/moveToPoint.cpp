@@ -6,6 +6,12 @@
 #include "pros/misc.hpp"
 
 void lemlib::Chassis::moveToPoint(float x, float y, int timeout, MoveToPointParams params, bool async) {
+    // auto-mirroring check
+    if (currentAlliance != defaultAlliance && currentAlliance != lemlib::Alliance::NONE && defaultAlliance != lemlib::Alliance::NONE) {
+        // flip X
+        x = -x;
+    }
+    
     params.earlyExitRange = fabs(params.earlyExitRange);
     this->requestMotionStart();
     // were all motions cancelled?
